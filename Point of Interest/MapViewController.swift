@@ -27,6 +27,7 @@ class MapViewController: UIViewController {
     @IBOutlet weak var tableView: UITableView!
     
     let regionRadius: CLLocationDistance = 10000
+    var activityIndicator = UIActivityIndicatorView()
     
     //Autocomplete variables
     var searchCompleter = MKLocalSearchCompleter()
@@ -52,6 +53,20 @@ class MapViewController: UIViewController {
         mapView.setRegion(coordinateRegion, animated: true)
     }
     
+    func disableUserInteraction() {
+        //Ignore user interaction during location search
+        UIApplication.shared.beginIgnoringInteractionEvents()
+        
+        //Display action durring location search
+        activityIndicator = UIActivityIndicatorView()
+        activityIndicator.style = .gray
+        activityIndicator.center = self.view.center
+        activityIndicator.hidesWhenStopped = true
+        activityIndicator.startAnimating()
+        
+        self.view.addSubview(activityIndicator)
+    }
+    
 }
 
 //MARK: - Search button functionality
@@ -63,61 +78,9 @@ extension MapViewController: UISearchBarDelegate, MKLocalSearchCompleterDelegate
     }
 
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        //Ignore user interaction during location search
-        UIApplication.shared.beginIgnoringInteractionEvents()
-        
-        //Hide tableview
-        tableView.isHidden = true
-
-        //Display action durring location search
-        let activityIndicator = UIActivityIndicatorView()
-        activityIndicator.style = .gray
-        activityIndicator.center = self.view.center
-        activityIndicator.hidesWhenStopped = true
-        activityIndicator.startAnimating()
-        
-        self.view.addSubview(activityIndicator)
-
-        //Hide search bar
-        searchBar.resignFirstResponder()
-        dismiss(animated: true, completion: nil)
-        
-        //Create the search request
-        let searchRequest = MKLocalSearch.Request()
-        searchRequest.naturalLanguageQuery = searchBar.text
-
-        let activeSearch = MKLocalSearch(request: searchRequest)
-        activeSearch.start { (response, error) in
-            
-            activityIndicator.stopAnimating()
-            UIApplication.shared.endIgnoringInteractionEvents()
-
-            if response == nil {
-                print("Error")
-            } else {
-//                print("This is response: \(String(describing: response))")
-//                print(response?.mapItems)
-                //Remove annotations
-                let annotations = self.mapView.annotations
-                self.mapView.removeAnnotations(annotations)
-
-                //Get data
-                let latitude = response?.boundingRegion.center.latitude
-                let longitude = response?.boundingRegion.center.longitude
-
-                //Create annotation
-                let annotation = MKPointAnnotation()
-                annotation.title = searchBar.text
-                annotation.coordinate = CLLocationCoordinate2DMake(latitude!, longitude!)
-                self.mapView.addAnnotation(annotation)
-
-                //Zooming in on annotation
-                let coordinate: CLLocationCoordinate2D = CLLocationCoordinate2DMake(latitude!, longitude!)
-                let span = MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
-                let region = MKCoordinateRegion(center: coordinate, span: span)
-                self.mapView.setRegion(region, animated: true)
-            }
-        }
+        disableUserInteraction()
+        hideSearchElements()
+        searchResultsInMap()
     }
     
     //MARK: - AutoCompleter functionality
@@ -130,27 +93,52 @@ extension MapViewController: UISearchBarDelegate, MKLocalSearchCompleterDelegate
         #warning ("TODO handle error")
     }
     
-    //MARK: - Extracted methods
-    func disableUserInteraction() {
-        //Ignore user interaction during location search
-        UIApplication.shared.beginIgnoringInteractionEvents()
-        
-        //Display action durring location search
-        let activityIndicator = UIActivityIndicatorView()
-        activityIndicator.style = .gray
-        activityIndicator.center = self.view.center
-        activityIndicator.hidesWhenStopped = true
-        activityIndicator.startAnimating()
-        
-        self.view.addSubview(activityIndicator)
-    }
-    
+    //MARK: - Extra search methods
     func hideSearchElements() {
-        //Hide tableview
+        //Hide and reload tableview
         tableView.isHidden = true
+        searchResults.removeAll()
+        tableView.reloadData()
         //Hide search bar
         searchController.searchBar.resignFirstResponder()
         dismiss(animated: true, completion: nil)
+    }
+    
+    func searchResultsInMap() {
+        //Create the search request
+        let searchRequest = MKLocalSearch.Request()
+        searchRequest.naturalLanguageQuery = searchController.searchBar.text
+        
+        let activeSearch = MKLocalSearch(request: searchRequest)
+        activeSearch.start { (response, error) in
+            
+            self.activityIndicator.stopAnimating()
+            UIApplication.shared.endIgnoringInteractionEvents()
+            
+            if response == nil {
+                print("Error")
+            } else {
+                //Get data
+                let latitude = response?.boundingRegion.center.latitude
+                let longitude = response?.boundingRegion.center.longitude
+                
+                //Remove annotations
+                let annotations = self.mapView.annotations
+                self.mapView.removeAnnotations(annotations)
+                
+                //Create annotation
+                let annotation = MKPointAnnotation()
+                annotation.title = self.searchController.searchBar.text
+                annotation.coordinate = CLLocationCoordinate2DMake(latitude!, longitude!)
+                self.mapView.addAnnotation(annotation)
+                
+                //Zooming in on annotation
+                let coordinate: CLLocationCoordinate2D = CLLocationCoordinate2DMake(latitude!, longitude!)
+                let span = MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
+                let region = MKCoordinateRegion(center: coordinate, span: span)
+                self.mapView.setRegion(region, animated: true)
+            }
+        }
     }
 }
 
@@ -170,11 +158,16 @@ extension MapViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         guard let currentCell = tableView.cellForRow(at: indexPath) else {return}
         searchController.searchBar.text = currentCell.textLabel?.text
+        disableUserInteraction()
+        hideSearchElements()
+        searchResultsInMap()
     }
 }
 
 
 extension MapViewController: MKMapViewDelegate {
+    
+    
 
 //    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
 //        guard let annotation = annotation as? Artwork else {return nil}

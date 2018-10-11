@@ -51,6 +51,7 @@
 		1C3639F6215D043B00097C5C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1C363A02215D056200097C5C /* PublicArt.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = PublicArt.json; sourceTree = "<group>"; };
 		1C363A04215E56E100097C5C /* Artwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Artwork.swift; sourceTree = "<group>"; };
+		1C363A06216F48A400097C5C /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,6 +82,7 @@
 		1C3639C8215D043900097C5C = {
 			isa = PBXGroup;
 			children = (
+				1C363A06216F48A400097C5C /* README.md */,
 				1C3639D3215D043900097C5C /* Point of Interest */,
 				1C3639E8215D043B00097C5C /* Point of InterestTests */,
 				1C3639F3215D043B00097C5C /* Point of InterestUITests */,
