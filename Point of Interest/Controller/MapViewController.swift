@@ -13,6 +13,8 @@ class MapViewController: UIViewController {
     
     @IBOutlet weak var mapView: MKMapView!
     
+   
+    
     var searchController = UISearchController()
     @IBAction func searchButton(_ sender: Any) {
         searchController = UISearchController(searchResultsController: nil)
@@ -39,14 +41,20 @@ class MapViewController: UIViewController {
         let initialLocation = CLLocation(latitude: 48.4254207, longitude: 19.7121448)
       
         centerMapOnLocation(location: initialLocation)
-        
+        //Set delegates
         mapView.delegate = self
         searchCompleter.delegate = self
         tableView.isHidden = true
-        //tableview color
+        //Tableview color
         tableView.backgroundColor = UIColor(white: 1, alpha: 0.5)
         tableView.tableFooterView = UIView(frame: .zero)
+        //Mapview property
+//        mapView.showsPointsOfInterest = true
+//        mapView.mapType = .satellite
+        
+        
     }
+    
     
     func centerMapOnLocation(location: CLLocation) {
         let coordinateRegion = MKCoordinateRegion(center: location.coordinate, latitudinalMeters: regionRadius, longitudinalMeters: regionRadius)
@@ -66,10 +74,11 @@ class MapViewController: UIViewController {
         
         self.view.addSubview(activityIndicator)
     }
+  
     
 }
 
-//MARK: - Search button functionality
+//MARK: - Search bar functionality
 extension MapViewController: UISearchBarDelegate, MKLocalSearchCompleterDelegate {
 
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
@@ -81,6 +90,10 @@ extension MapViewController: UISearchBarDelegate, MKLocalSearchCompleterDelegate
         disableUserInteraction()
         hideSearchElements()
         searchResultsInMap()
+    }
+    
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        hideSearchElements()
     }
     
     //MARK: - AutoCompleter functionality

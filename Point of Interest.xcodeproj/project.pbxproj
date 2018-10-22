@@ -103,8 +103,8 @@
 		1C3639D3215D043900097C5C /* Point of Interest */ = {
 			isa = PBXGroup;
 			children = (
+				1C363A07216F6EF800097C5C /* Controller */,
 				1C3639D4215D043900097C5C /* AppDelegate.swift */,
-				1C3639D6215D043900097C5C /* MapViewController.swift */,
 				1C3639D8215D043900097C5C /* Main.storyboard */,
 				1C3639DB215D043B00097C5C /* Assets.xcassets */,
 				1C3639DD215D043B00097C5C /* LaunchScreen.storyboard */,
@@ -131,6 +131,14 @@
 				1C3639F6215D043B00097C5C /* Info.plist */,
 			);
 			path = "Point of InterestUITests";
+			sourceTree = "<group>";
+		};
+		1C363A07216F6EF800097C5C /* Controller */ = {
+			isa = PBXGroup;
+			children = (
+				1C3639D6215D043900097C5C /* MapViewController.swift */,
+			);
+			path = Controller;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
