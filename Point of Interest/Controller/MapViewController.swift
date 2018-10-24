@@ -8,6 +8,7 @@
 
 import UIKit
 import MapKit
+import ChameleonFramework
 
 class MapViewController: UIViewController {
     

@@ -49,8 +49,6 @@ class PointOfInterestTableViewController: SwipeTableViewController {
         navBar.tintColor = ContrastColorOf(navBarColor, returnFlat: true)
         //Lagre text because we mark in storyboard preffered large titles, get from all navbar atributes foreground color and change it to specified color
         navBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor : ContrastColorOf(navBarColor, returnFlat: true)]
-        #warning ("If this fail then use commented version if not then remove it")
-//        navBar.largeTitleTextAttributes = [NSAttributedStringKey.foregroundColor : ContrastColorOf(navBarColor, returnFlat: true)
     }
     
     //MARK: - Tableview Datasource Methods

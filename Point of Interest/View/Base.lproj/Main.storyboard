@@ -89,9 +89,10 @@
                     </tableView>
                     <toolbarItems/>
                     <navigationItem key="navigationItem" title="Point Of Interest" id="pt6-r5-rRn">
-                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="j67-Pc-Qe5">
+                        <barButtonItem key="rightBarButtonItem" title="Item" image="map-icon" id="j67-Pc-Qe5">
                             <connections>
                                 <action selector="addButtonPressed:" destination="AiQ-wS-otM" id="PpT-Vq-2ui"/>
+                                <segue destination="BYZ-38-t0r" kind="show" identifier="goToMap" id="FtE-tY-Ycq"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
@@ -110,10 +111,10 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="UQH-EU-iX4">
-                                <rect key="frame" x="0.0" y="20" width="375" height="647"/>
+                                <rect key="frame" x="0.0" y="64" width="375" height="559"/>
                             </mapView>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="bX1-wG-TPe">
-                                <rect key="frame" x="0.0" y="20" width="375" height="647"/>
+                                <rect key="frame" x="0.0" y="64" width="375" height="559"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <prototypes>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="Cell" id="3LR-in-2bn">
@@ -145,7 +146,7 @@
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
                     <navigationItem key="navigationItem" id="9Fa-Me-4xs">
-                        <barButtonItem key="rightBarButtonItem" systemItem="search" id="HVD-oc-OzY">
+                        <barButtonItem key="rightBarButtonItem" title="Item" image="search-icon" id="HVD-oc-OzY">
                             <connections>
                                 <action selector="searchButton:" destination="BYZ-38-t0r" id="Nvk-2z-PO0"/>
                             </connections>
@@ -158,7 +159,11 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1516" y="229"/>
+            <point key="canvasLocation" x="1455" y="133"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="map-icon" width="48" height="48"/>
+        <image name="search-icon" width="48" height="48"/>
+    </resources>
 </document>
