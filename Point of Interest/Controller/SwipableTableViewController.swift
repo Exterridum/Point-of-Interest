@@ -11,10 +11,16 @@ import SwipeCellKit
 
 class SwipeTableViewController: UITableViewController, SwipeTableViewCellDelegate {
     
+    var noDataLabel: UILabel = UILabel()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.rowHeight = 80.0
-
+        //Set default values for noDataLabel
+        noDataLabel = UILabel(frame: CGRect(x: 0, y: 0, width: tableView.bounds.size.width, height: tableView.bounds.size.height))
+        noDataLabel.text          = "No data available."
+        noDataLabel.textAlignment = .center
+        noDataLabel.numberOfLines = 2
     }
     
     //Mark: - Tableview Datasource Methods
@@ -46,3 +52,4 @@ class SwipeTableViewController: UITableViewController, SwipeTableViewCellDelegat
     }
 
 }
+

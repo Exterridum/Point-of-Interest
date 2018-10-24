@@ -55,6 +55,14 @@ class PointOfInterestTableViewController: SwipeTableViewController {
     
     //MARK: - Tableview Datasource Methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if pointOfInterests?.count == 0 {
+            noDataLabel.text          = "No point of interests available. \nPress + button to add a new point of interests."
+            tableView.backgroundView  = noDataLabel
+            tableView.separatorStyle  = .none
+        }
+        else {
+            tableView.backgroundView = nil
+        }
         return pointOfInterests?.count ?? 1
     }
     

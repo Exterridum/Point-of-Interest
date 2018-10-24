@@ -23,6 +23,14 @@ class TripTableViewController: SwipeTableViewController {
     
     //MARK: - Tableview Datasource Methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if trips?.count == 0 {
+            noDataLabel.text          = "No trip available. \nPress + button to add a new trip."
+            tableView.backgroundView  = noDataLabel
+            tableView.separatorStyle  = .none
+        }
+        else {
+            tableView.backgroundView = nil
+        }
         return trips?.count ?? 1
     }
     
