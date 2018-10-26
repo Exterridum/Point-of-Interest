@@ -91,7 +91,7 @@
                     <navigationItem key="navigationItem" title="Point Of Interest" id="pt6-r5-rRn">
                         <barButtonItem key="rightBarButtonItem" title="Item" image="map-icon" id="j67-Pc-Qe5">
                             <connections>
-                                <action selector="addButtonPressed:" destination="AiQ-wS-otM" id="PpT-Vq-2ui"/>
+                                <action selector="mapButtonPressed:" destination="AiQ-wS-otM" id="0zp-ID-bkX"/>
                                 <segue destination="BYZ-38-t0r" kind="show" identifier="goToMap" id="FtE-tY-Ycq"/>
                             </connections>
                         </barButtonItem>

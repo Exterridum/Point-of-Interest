@@ -15,8 +15,9 @@ class PointOfInterestTableViewController: SwipeTableViewController {
     var pointOfInterests: Results<PointOfInterest>?
     let realm = try! Realm()
     
-    @IBOutlet weak var searchBar: UISearchBar!
-    
+    @IBAction func mapButtonPressed(_ sender: Any) {
+        performSegue(withIdentifier: "goToPointOfInterests", sender: self)
+    }
     
     var selectedTrip : Trip? {
         didSet{
@@ -37,6 +38,12 @@ class PointOfInterestTableViewController: SwipeTableViewController {
     
     override func viewWillDisappear(_ animated: Bool) {
         updateNavBar(withHexCode: "1D9BF6")
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let destinationVC = segue.destination as! MapViewController
+        #warning("pass POI to mapview")
+        destinationVC.selectedTrip = self.selectedTrip
     }
     
     //MARK: - Nav Bar Setup Methods
@@ -109,6 +116,7 @@ class PointOfInterestTableViewController: SwipeTableViewController {
         let action = UIAlertAction(title: "Add point of interest", style: .default) { (action) in
             if let currentTrip = self.selectedTrip {
                 do {
+                    #warning("Edit this to actual POI values, like order, lat, long,...")
                     try self.realm.write {
                         let newPointOfInterest = PointOfInterest()
                         newPointOfInterest.title = textField.text!
@@ -131,6 +139,7 @@ class PointOfInterestTableViewController: SwipeTableViewController {
         present(alert, animated: true, completion: nil)
     }
     
+    #warning("Edit this to order")
     fileprivate func loadPointOfInterests() {
         pointOfInterests = selectedTrip?.pointOfInterests.sorted(byKeyPath: "dateCreated", ascending: true)
         tableView.reloadData()
@@ -155,6 +164,7 @@ extension PointOfInterestTableViewController: UISearchBarDelegate {
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         //        todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "title", ascending: true)
+        #warning("Edit this to order")
         pointOfInterests = pointOfInterests?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: true)
         tableView.reloadData()
     }
