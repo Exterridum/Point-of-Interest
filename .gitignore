@@ -1,0 +1,57 @@
+# Xcode
+.DS_Store
+*.pbxuser
+xcuserdata
+profile
+DerivedData
+*.xccheckout
+*.xcscmblueprint
+IDEWorkspaceChecks.plist
+
+# cocoapods
+Pods
+Podfile.lock
+
+# eva related artifacts
+node_modules
+results
+instruments*
+build
+artifacts
+reports
+
+# iTunes connect packages
+Package.itmsp
+
+# Generated licenses file
+RingATT/Pods-acknowledgements.plist
+RingATTCompanion/Pods-acknowledgements.plist
+RingATTShared/Pods-acknowledgements.plist
+
+# pip
+build-env
+
+# provision file
+#*.mobileprovision
+
+# fastlane
+fastlane/report.xml
+fastlane/test_output/
+fastlane/README.md
+
+# localization
+RingATT/Localizations.swift
+RingATTCompanion/Localizations.swift
+RingATTShared/Localizations.swift
+
+# build results
+GitHashes.swift
+GitHashes.json
+
+
+#Realm
+*.realm
+*.realm.lock
+/Realm/config.mk
+*/Realm.framework
+Realm.framework
