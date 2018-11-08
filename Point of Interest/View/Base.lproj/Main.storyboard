@@ -89,14 +89,25 @@
                     </tableView>
                     <toolbarItems/>
                     <navigationItem key="navigationItem" title="Point Of Interest" id="pt6-r5-rRn">
-                        <barButtonItem key="rightBarButtonItem" title="Item" image="map-icon" id="j67-Pc-Qe5">
-                            <connections>
-                                <action selector="mapButtonPressed:" destination="AiQ-wS-otM" id="0zp-ID-bkX"/>
-                                <segue destination="BYZ-38-t0r" kind="show" identifier="goToMap" id="FtE-tY-Ycq"/>
-                            </connections>
-                        </barButtonItem>
+                        <rightBarButtonItems>
+                            <barButtonItem title="Item" image="map-icon" id="j67-Pc-Qe5">
+                                <connections>
+                                    <action selector="mapButtonPressed:" destination="AiQ-wS-otM" id="0zp-ID-bkX"/>
+                                    <segue destination="BYZ-38-t0r" kind="show" identifier="goToMap" id="FtE-tY-Ycq"/>
+                                </connections>
+                            </barButtonItem>
+                            <barButtonItem enabled="NO" title="Item" image="checkmark-icon" id="eOF-Rh-7gk">
+                                <connections>
+                                    <action selector="saveButtonPressed:" destination="AiQ-wS-otM" id="WS1-Ya-Uvg"/>
+                                </connections>
+                            </barButtonItem>
+                        </rightBarButtonItems>
                     </navigationItem>
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
+                    <connections>
+                        <outlet property="mapButton" destination="j67-Pc-Qe5" id="Ikb-HN-e1z"/>
+                        <outlet property="saveButton" destination="eOF-Rh-7gk" id="TYi-Cf-Pof"/>
+                    </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="YmF-fs-Hpv" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -163,6 +174,7 @@
         </scene>
     </scenes>
     <resources>
+        <image name="checkmark-icon" width="48" height="48"/>
         <image name="map-icon" width="48" height="48"/>
         <image name="search-icon" width="48" height="48"/>
     </resources>

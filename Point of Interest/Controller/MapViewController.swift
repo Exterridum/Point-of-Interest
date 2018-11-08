@@ -157,7 +157,7 @@ extension MapViewController: UISearchBarDelegate, MKLocalSearchCompleterDelegate
                 newPointOfInterest.title = title
                 newPointOfInterest.latitude = latitude
                 newPointOfInterest.longitude = longitude
-                newPointOfInterest.order = 0
+                newPointOfInterest.order = self.mapView.annotations.count
                 newPointOfInterest.dateCreated = Date()
                 self.selectedPointOfInterest = newPointOfInterest
                 
@@ -169,21 +169,21 @@ extension MapViewController: UISearchBarDelegate, MKLocalSearchCompleterDelegate
                 self.mapView.addAnnotation(annotation)
 
                 #warning("Edit this to actual POI values, like order, lat, long,...")
-//                if let currentTrip = self.selectedTrip {
-//                    do {
-//                        try self.realm.write {
+                if let currentTrip = self.selectedTrip {
+                    do {
+                        try self.realm.write {
 //                            let newPointOfInterest = PointOfInterest()
 //                            newPointOfInterest.title = title
 //                            newPointOfInterest.latitude = latitude
 //                            newPointOfInterest.longitude = longitude
 //                            newPointOfInterest.order = 0
 //                            newPointOfInterest.dateCreated = Date()
-//                            currentTrip.pointOfInterests.append(newPointOfInterest)
-//                        }
-//                    } catch {
-//                        print("Error saving new point of interest \(error)")
-//                    }
-//                }
+                            currentTrip.pointOfInterests.append(newPointOfInterest)
+                        }
+                    } catch {
+                        print("Error saving new point of interest \(error)")
+                    }
+                }
                 
 
                 
@@ -223,7 +223,6 @@ extension MapViewController: UITableViewDelegate, UITableViewDataSource {
 extension MapViewController: MKMapViewDelegate {
    
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        #warning("Display save and cross button")
         selectedAnnotation = view.annotation as? MKPointAnnotation
         view.isDraggable = true
     }
@@ -297,8 +296,11 @@ extension MapViewController: MKMapViewDelegate {
                     if pm.postalCode != nil {
                         addressString = addressString + pm.postalCode! + " "
                     }
-                    #warning("Guard it if no adress appear to write error, and disable user to save it")
-                    self.selectedAnnotation?.title = addressString
+                    if addressString.isEmpty {
+                        self.selectedAnnotation?.title = "No adress found."
+                    } else {
+                        self.selectedAnnotation?.title = addressString
+                    }
                 }
         })
     }

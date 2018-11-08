@@ -16,8 +16,19 @@ class PointOfInterestTableViewController: SwipeTableViewController {
     let realm = try! Realm()
     
     @IBAction func mapButtonPressed(_ sender: Any) {
-        performSegue(withIdentifier: "goToPointOfInterests", sender: self)
+//        mapButton.image = UIImage(named:"map-icon.png")
+//        tableView.isEditing = false
+        performSegue(withIdentifier: "goToMap", sender: self)
     }
+    
+    @IBOutlet weak var mapButton: UIBarButtonItem!
+
+    @IBAction func saveButtonPressed(_ sender: Any) {
+        tableView.isEditing = false
+        saveButton.isEnabled = false
+    }
+    
+    @IBOutlet weak var saveButton: UIBarButtonItem!
     
     var selectedTrip : Trip? {
         didSet{
@@ -28,6 +39,9 @@ class PointOfInterestTableViewController: SwipeTableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.separatorStyle = .none
+        // long press recognizer for tableview, placed in viewDidLoad
+        let recognizer = UILongPressGestureRecognizer(target: self, action: #selector(longPress))
+        view.addGestureRecognizer(recognizer)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -105,8 +119,38 @@ class PointOfInterestTableViewController: SwipeTableViewController {
     override func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
+   
+    //MARK: - Reorder table cells
+    override func tableView(_ tableView: UITableView, editingStyleForRowAt indexPath: IndexPath) -> UITableViewCell.EditingStyle {
+        return .none
+    }
+
+    override func tableView(_ tableView: UITableView, shouldIndentWhileEditingRowAt indexPath: IndexPath) -> Bool {
+        return false
+    }
+
+    override func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+        do {
+            try realm.write {
+                selectedTrip?.pointOfInterests[sourceIndexPath.row].order = destinationIndexPath.row
+                selectedTrip?.pointOfInterests[destinationIndexPath.row].order = sourceIndexPath.row
+                tableView.reloadData()
+            }
+        } catch  {
+            print("Error saving done status \(error)")
+        }
+    }
+
+    //Tableview long press gesture reckognizer
+    @objc func longPress(longPressGestureRecognizer: UILongPressGestureRecognizer) {
+        if longPressGestureRecognizer.state == UIGestureRecognizer.State.began {
+            tableView.isEditing = true
+            saveButton.isEnabled = true
+        }
+    }
     
     //MARK: - Add New Point Of Interests
+    #warning("unused method remove when not needed")
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         
         var textField = UITextField()
@@ -139,11 +183,12 @@ class PointOfInterestTableViewController: SwipeTableViewController {
         present(alert, animated: true, completion: nil)
     }
     
-    #warning("Edit this to order")
     fileprivate func loadPointOfInterests() {
-        pointOfInterests = selectedTrip?.pointOfInterests.sorted(byKeyPath: "dateCreated", ascending: true)
+        pointOfInterests = selectedTrip?.pointOfInterests.sorted(byKeyPath: "order", ascending: true)
         tableView.reloadData()
     }
+    
+    
     
     override func updateModel(at indexPath: IndexPath) {
         if let item = pointOfInterests?[indexPath.row] {
