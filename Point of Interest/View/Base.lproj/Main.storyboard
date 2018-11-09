@@ -96,7 +96,7 @@
                                     <segue destination="BYZ-38-t0r" kind="show" identifier="goToMap" id="FtE-tY-Ycq"/>
                                 </connections>
                             </barButtonItem>
-                            <barButtonItem enabled="NO" title="Item" image="checkmark-icon" id="eOF-Rh-7gk">
+                            <barButtonItem title="Item" image="checkmark-icon" id="eOF-Rh-7gk">
                                 <connections>
                                     <action selector="saveButtonPressed:" destination="AiQ-wS-otM" id="WS1-Ya-Uvg"/>
                                 </connections>
@@ -105,8 +105,8 @@
                     </navigationItem>
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
-                        <outlet property="mapButton" destination="j67-Pc-Qe5" id="Ikb-HN-e1z"/>
-                        <outlet property="saveButton" destination="eOF-Rh-7gk" id="TYi-Cf-Pof"/>
+                        <outlet property="mapButton" destination="j67-Pc-Qe5" id="TLy-bp-uCe"/>
+                        <outlet property="saveButton" destination="eOF-Rh-7gk" id="wck-Dn-ihB"/>
                     </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="YmF-fs-Hpv" userLabel="First Responder" sceneMemberID="firstResponder"/>

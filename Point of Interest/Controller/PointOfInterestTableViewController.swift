@@ -16,19 +16,21 @@ class PointOfInterestTableViewController: SwipeTableViewController {
     let realm = try! Realm()
     
     @IBAction func mapButtonPressed(_ sender: Any) {
-//        mapButton.image = UIImage(named:"map-icon.png")
-//        tableView.isEditing = false
         performSegue(withIdentifier: "goToMap", sender: self)
     }
-    
-    @IBOutlet weak var mapButton: UIBarButtonItem!
 
+    @IBOutlet var mapButton: UIBarButtonItem!
+    
     @IBAction func saveButtonPressed(_ sender: Any) {
         tableView.isEditing = false
-        saveButton.isEnabled = false
+        // Disable all buttons
+        navigationItem.rightBarButtonItem = nil
+        // Enable mapButton
+        navigationItem.rightBarButtonItem = self.mapButton
+        navigationItem.setHidesBackButton(false, animated: true)
     }
     
-    @IBOutlet weak var saveButton: UIBarButtonItem!
+    @IBOutlet var saveButton: UIBarButtonItem!
     
     var selectedTrip : Trip? {
         didSet{
@@ -42,6 +44,10 @@ class PointOfInterestTableViewController: SwipeTableViewController {
         // long press recognizer for tableview, placed in viewDidLoad
         let recognizer = UILongPressGestureRecognizer(target: self, action: #selector(longPress))
         view.addGestureRecognizer(recognizer)
+        // Disable all buttons
+        navigationItem.rightBarButtonItem = nil
+        // Enable mapButton
+        navigationItem.rightBarButtonItem = self.mapButton
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -145,7 +151,11 @@ class PointOfInterestTableViewController: SwipeTableViewController {
     @objc func longPress(longPressGestureRecognizer: UILongPressGestureRecognizer) {
         if longPressGestureRecognizer.state == UIGestureRecognizer.State.began {
             tableView.isEditing = true
-            saveButton.isEnabled = true
+            // Disable all buttons
+            navigationItem.rightBarButtonItem = nil
+            // Enable saveButton
+            navigationItem.rightBarButtonItem = self.saveButton
+            navigationItem.setHidesBackButton(true, animated: true)
         }
     }
     
@@ -223,3 +233,5 @@ extension PointOfInterestTableViewController: UISearchBarDelegate {
         }
     }
 }
+
+
