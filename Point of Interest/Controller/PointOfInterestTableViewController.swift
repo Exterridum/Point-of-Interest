@@ -28,6 +28,8 @@ class PointOfInterestTableViewController: SwipeTableViewController {
         // Enable mapButton
         navigationItem.rightBarButtonItem = self.mapButton
         navigationItem.setHidesBackButton(false, animated: true)
+        // Save data and reload table to change cell colors
+        loadPointOfInterests()
     }
     
     @IBOutlet var saveButton: UIBarButtonItem!
@@ -37,7 +39,7 @@ class PointOfInterestTableViewController: SwipeTableViewController {
             loadPointOfInterests()
         }
     }
-    
+  
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.separatorStyle = .none
@@ -136,18 +138,36 @@ class PointOfInterestTableViewController: SwipeTableViewController {
     }
 
     override func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
-        do {
-            try realm.write {
-                selectedTrip?.pointOfInterests[sourceIndexPath.row].order = destinationIndexPath.row
-                selectedTrip?.pointOfInterests[destinationIndexPath.row].order = sourceIndexPath.row
-                tableView.reloadData()
+        if sourceIndexPath.row != destinationIndexPath.row {
+            if let actualPointOfInterests = pointOfInterests  {
+                do {
+                    try realm.write {
+                        actualPointOfInterests[sourceIndexPath.row].order = -1
+                        print("Moved - \(actualPointOfInterests[sourceIndexPath.row].order)")
+                        var i = 0
+                        for pointOfInterest in actualPointOfInterests {
+                            if pointOfInterest.order != -1 && i <= destinationIndexPath.row{
+                                pointOfInterest.order = i
+                                i += 1
+                            }
+                            if pointOfInterest.order == -1 {
+                                pointOfInterest.order = destinationIndexPath.row
+                            }
+                            if pointOfInterest.order != -1 && i > destinationIndexPath.row{
+                                pointOfInterest.order = i
+                                i += 1
+                            }
+                        }
+                    }
+                } catch {
+                    print("Error \(error)")
+                }
             }
-        } catch  {
-            print("Error saving done status \(error)")
         }
     }
 
     //Tableview long press gesture reckognizer
+    #warning("Implement stop scrolling when table is reordering or search good way how to do it.")
     @objc func longPress(longPressGestureRecognizer: UILongPressGestureRecognizer) {
         if longPressGestureRecognizer.state == UIGestureRecognizer.State.began {
             tableView.isEditing = true

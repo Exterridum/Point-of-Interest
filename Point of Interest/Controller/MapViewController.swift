@@ -172,12 +172,6 @@ extension MapViewController: UISearchBarDelegate, MKLocalSearchCompleterDelegate
                 if let currentTrip = self.selectedTrip {
                     do {
                         try self.realm.write {
-//                            let newPointOfInterest = PointOfInterest()
-//                            newPointOfInterest.title = title
-//                            newPointOfInterest.latitude = latitude
-//                            newPointOfInterest.longitude = longitude
-//                            newPointOfInterest.order = 0
-//                            newPointOfInterest.dateCreated = Date()
                             currentTrip.pointOfInterests.append(newPointOfInterest)
                         }
                     } catch {
