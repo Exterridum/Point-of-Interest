@@ -12,9 +12,20 @@ import ChameleonFramework
 
 class PointOfInterestTableViewController: SwipeTableViewController {
     
+    //MARK: - DB variables
     var pointOfInterests: Results<PointOfInterest>?
     let realm = try! Realm()
     
+    var selectedTrip : Trip? {
+        didSet{
+            loadPointOfInterests()
+        }
+    }
+    
+    //MARK: - Local variables
+    var tableviewOrder: [Int] = []
+    
+    //MARK: - Buttons and actions
     @IBAction func mapButtonPressed(_ sender: Any) {
         performSegue(withIdentifier: "goToMap", sender: self)
     }
@@ -24,22 +35,37 @@ class PointOfInterestTableViewController: SwipeTableViewController {
     @IBAction func saveButtonPressed(_ sender: Any) {
         tableView.isEditing = false
         // Disable all buttons
-        navigationItem.rightBarButtonItem = nil
+        navigationItem.rightBarButtonItems = nil
         // Enable mapButton
         navigationItem.rightBarButtonItem = self.mapButton
         navigationItem.setHidesBackButton(false, animated: true)
-        // Save data and reload table to change cell colors
-        loadPointOfInterests()
     }
     
     @IBOutlet var saveButton: UIBarButtonItem!
     
-    var selectedTrip : Trip? {
-        didSet{
-            loadPointOfInterests()
+    @IBAction func cancelButtonPressed(_ sender: Any) {
+        guard let pointofInterests = selectedTrip?.pointOfInterests else {print("Problem with loading selected trip"); return}
+        do {
+            try realm.write {
+                for (index, pointOfInterest) in pointofInterests.enumerated() {
+                    pointOfInterest.order = tableviewOrder[index]
+                }
+            }
+        } catch {
+            print("Error deleting, \(error)")
         }
+        tableView.reloadData()
+        tableView.isEditing = false
+        // Disable all buttons
+        navigationItem.rightBarButtonItems = nil
+        // Enable mapButton
+        navigationItem.rightBarButtonItem = self.mapButton
+        navigationItem.setHidesBackButton(false, animated: true)
     }
-  
+    
+    @IBOutlet var cancelButton: UIBarButtonItem!
+    
+    //MARK: - Controller base functionality
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.separatorStyle = .none
@@ -47,7 +73,7 @@ class PointOfInterestTableViewController: SwipeTableViewController {
         let recognizer = UILongPressGestureRecognizer(target: self, action: #selector(longPress))
         view.addGestureRecognizer(recognizer)
         // Disable all buttons
-        navigationItem.rightBarButtonItem = nil
+        navigationItem.rightBarButtonItems = nil
         // Enable mapButton
         navigationItem.rightBarButtonItem = self.mapButton
     }
@@ -143,7 +169,6 @@ class PointOfInterestTableViewController: SwipeTableViewController {
                 do {
                     try realm.write {
                         actualPointOfInterests[sourceIndexPath.row].order = -1
-                        print("Moved - \(actualPointOfInterests[sourceIndexPath.row].order)")
                         var i = 0
                         for pointOfInterest in actualPointOfInterests {
                             if pointOfInterest.order != -1 && i <= destinationIndexPath.row{
@@ -173,9 +198,15 @@ class PointOfInterestTableViewController: SwipeTableViewController {
             tableView.isEditing = true
             // Disable all buttons
             navigationItem.rightBarButtonItem = nil
-            // Enable saveButton
-            navigationItem.rightBarButtonItem = self.saveButton
+            // Enable save, cancel on right side, hide back button on left side
+            navigationItem.setRightBarButtonItems([saveButton, cancelButton], animated: true)
             navigationItem.setHidesBackButton(true, animated: true)
+            //Load actual tableview order
+            guard let pointOfInterests = selectedTrip?.pointOfInterests else {return}
+            for pointOfInterest in pointOfInterests{
+                tableviewOrder.append(pointOfInterest.order)
+            }
+            print("Actual order is \(tableviewOrder)")
         }
     }
     

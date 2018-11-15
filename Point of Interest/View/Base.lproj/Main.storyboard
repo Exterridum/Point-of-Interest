@@ -101,10 +101,16 @@
                                     <action selector="saveButtonPressed:" destination="AiQ-wS-otM" id="WS1-Ya-Uvg"/>
                                 </connections>
                             </barButtonItem>
+                            <barButtonItem title="Item" image="delete-icon" id="DLq-4X-jjy">
+                                <connections>
+                                    <action selector="cancelButtonPressed:" destination="AiQ-wS-otM" id="NwN-kh-qoK"/>
+                                </connections>
+                            </barButtonItem>
                         </rightBarButtonItems>
                     </navigationItem>
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
+                        <outlet property="cancelButton" destination="DLq-4X-jjy" id="KBs-nn-n1b"/>
                         <outlet property="mapButton" destination="j67-Pc-Qe5" id="TLy-bp-uCe"/>
                         <outlet property="saveButton" destination="eOF-Rh-7gk" id="wck-Dn-ihB"/>
                     </connections>
@@ -175,6 +181,7 @@
     </scenes>
     <resources>
         <image name="checkmark-icon" width="48" height="48"/>
+        <image name="delete-icon" width="48" height="48"/>
         <image name="map-icon" width="48" height="48"/>
         <image name="search-icon" width="48" height="48"/>
     </resources>

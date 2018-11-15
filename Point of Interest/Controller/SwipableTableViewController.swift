@@ -37,7 +37,7 @@ class SwipeTableViewController: UITableViewController, SwipeTableViewCellDelegat
             print("Delete Cell")
             self.updateModel(at: indexPath)
         }
-        deleteAction.image = UIImage(named: "delete-icon")
+        deleteAction.image = UIImage(named: "trash-icon")
         return [deleteAction]
     }
     
