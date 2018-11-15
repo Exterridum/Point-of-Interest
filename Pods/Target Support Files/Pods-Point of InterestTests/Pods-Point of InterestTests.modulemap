@@ -1,0 +1,6 @@
+framework module Pods_Point_of_InterestTests {
+  umbrella header "Pods-Point of InterestTests-umbrella.h"
+
+  export *
+  module * { export * }
+}

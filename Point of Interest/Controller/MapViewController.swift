@@ -8,12 +8,12 @@
 
 import UIKit
 import MapKit
+import ChameleonFramework
+import RealmSwift
 
 class MapViewController: UIViewController {
     
     @IBOutlet weak var mapView: MKMapView!
-    
-   
     
     var searchController = UISearchController()
     @IBAction func searchButton(_ sender: Any) {
@@ -34,13 +34,26 @@ class MapViewController: UIViewController {
     //Autocomplete variables
     var searchCompleter = MKLocalSearchCompleter()
     var searchResults = [MKLocalSearchCompletion]()
+
+    
+    var selectedTrip : Trip?
+    var selectedPointOfInterest: PointOfInterest?
+    var selectedAnnotation: MKPointAnnotation?
+    
+    let realm = try! Realm()
+        
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        let initialLocation = CLLocation(latitude: 48.4254207, longitude: 19.7121448)
+        
+//        let initialLocation = CLLocation(latitude: 48.4254207, longitude: 19.7121448)
+ 
+//        centerMapOnLocation(location: mapView.userLocation.location ?? initialLocation)
+//        if //permisions is enabled use current user position
+//            else // use initial location
       
-        centerMapOnLocation(location: initialLocation)
+//        centerMapOnLocation(location: initialLocation)
         //Set delegates
         mapView.delegate = self
         searchCompleter.delegate = self
@@ -49,13 +62,14 @@ class MapViewController: UIViewController {
         tableView.backgroundColor = UIColor(white: 1, alpha: 0.5)
         tableView.tableFooterView = UIView(frame: .zero)
         //Mapview property
+
+        mapView.showsUserLocation = true
 //        mapView.showsPointsOfInterest = true
 //        mapView.mapType = .satellite
-        
-        
+//        Debug
     }
     
-    
+    #warning("Remove propably wont need it anymore")
     func centerMapOnLocation(location: CLLocation) {
         let coordinateRegion = MKCoordinateRegion(center: location.coordinate, latitudinalMeters: regionRadius, longitudinalMeters: regionRadius)
         mapView.setRegion(coordinateRegion, animated: true)
@@ -74,8 +88,6 @@ class MapViewController: UIViewController {
         
         self.view.addSubview(activityIndicator)
     }
-  
-    
 }
 
 //MARK: - Search bar functionality
@@ -131,22 +143,46 @@ extension MapViewController: UISearchBarDelegate, MKLocalSearchCompleterDelegate
             if response == nil {
                 print("Error")
             } else {
-                //Get data
-                let latitude = response?.boundingRegion.center.latitude
-                let longitude = response?.boundingRegion.center.longitude
+                //Get point of interest data
+                let title = response?.mapItems.first?.placemark.title ?? "Title does not exists"
+                let latitude = response?.boundingRegion.center.latitude ?? 0.0
+                let longitude = response?.boundingRegion.center.longitude ?? 0.0
                 
                 //Remove annotations
-                let annotations = self.mapView.annotations
-                self.mapView.removeAnnotations(annotations)
+//                let annotations = self.mapView.annotations
+//                self.mapView.removeAnnotations(annotations)
+  
+                //Create point of interest
+                let newPointOfInterest = PointOfInterest()
+                newPointOfInterest.title = title
+                newPointOfInterest.latitude = latitude
+                newPointOfInterest.longitude = longitude
+                newPointOfInterest.order = self.mapView.annotations.count
+                newPointOfInterest.dateCreated = Date()
+                self.selectedPointOfInterest = newPointOfInterest
                 
                 //Create annotation
                 let annotation = MKPointAnnotation()
-                annotation.title = self.searchController.searchBar.text
-                annotation.coordinate = CLLocationCoordinate2DMake(latitude!, longitude!)
+                annotation.title = title
+                annotation.coordinate = CLLocationCoordinate2DMake(latitude, longitude)
+                
                 self.mapView.addAnnotation(annotation)
+
+                #warning("Edit this to actual POI values, like order, lat, long,...")
+                if let currentTrip = self.selectedTrip {
+                    do {
+                        try self.realm.write {
+                            currentTrip.pointOfInterests.append(newPointOfInterest)
+                        }
+                    } catch {
+                        print("Error saving new point of interest \(error)")
+                    }
+                }
+                
+
                 
                 //Zooming in on annotation
-                let coordinate: CLLocationCoordinate2D = CLLocationCoordinate2DMake(latitude!, longitude!)
+                let coordinate: CLLocationCoordinate2D = CLLocationCoordinate2DMake(latitude, longitude)
                 let span = MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
                 let region = MKCoordinateRegion(center: coordinate, span: span)
                 self.mapView.setRegion(region, animated: true)
@@ -179,8 +215,89 @@ extension MapViewController: UITableViewDelegate, UITableViewDataSource {
 
 
 extension MapViewController: MKMapViewDelegate {
+   
+    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        selectedAnnotation = view.annotation as? MKPointAnnotation
+        view.isDraggable = true
+    }
     
+    func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, didChange newState: MKAnnotationView.DragState, fromOldState oldState: MKAnnotationView.DragState) {
+        switch (newState) {
+        case .starting:
+            //view.dragState = .dragging
+            print("dragging.....")
+        case .ending, .canceling:
+            // view.dragState = .none
+            let lat = view.annotation?.coordinate.latitude
+            let long = view.annotation?.coordinate.longitude
+            getAddressFromLatLon(latitude: lat!, longitude: long!)
+            view.isDraggable = false
+            #warning("check if adress exists if not disable cross button with message you must speciffy correct route")
+            
+        default: break
+        }
+    }
     
+    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+        if annotation is MKPointAnnotation {
+            let pinAnnotationView = MKAnnotationView(annotation: annotation, reuseIdentifier: "myPin")
+            
+
+            pinAnnotationView.annotation = annotation
+//            pinAnnotationView.isDraggable = true
+            pinAnnotationView.canShowCallout = true
+            pinAnnotationView.image = UIImage(named:"pin-icon.png")
+
+            return pinAnnotationView
+        }
+
+        return nil
+    }
+    
+    func getAddressFromLatLon(latitude: Double, longitude: Double){
+        var center : CLLocationCoordinate2D = CLLocationCoordinate2D()
+        
+        let ceo: CLGeocoder = CLGeocoder()
+        center.latitude = latitude
+        center.longitude = longitude
+        
+        let loc: CLLocation = CLLocation(latitude:center.latitude, longitude: center.longitude)
+        var addressString : String = ""
+        
+        ceo.reverseGeocodeLocation(loc, completionHandler:
+            {(placemarks, error) in
+                if (error != nil)
+                {
+                    print("reverse geodcode fail: \(error!.localizedDescription)")
+                }
+                let pm = placemarks! as [CLPlacemark]
+                
+                if pm.count > 0 {
+                    let pm = placemarks![0]
+        
+                    if pm.subLocality != nil {
+                        addressString = addressString + pm.subLocality! + ", "
+                    }
+                    if pm.thoroughfare != nil {
+                        addressString = addressString + pm.thoroughfare! + ", "
+                    }
+                    if pm.locality != nil {
+                        addressString = addressString + pm.locality! + ", "
+                    }
+                    if pm.country != nil {
+                        addressString = addressString + pm.country! + ", "
+                    }
+                    if pm.postalCode != nil {
+                        addressString = addressString + pm.postalCode! + " "
+                    }
+                    if addressString.isEmpty {
+                        self.selectedAnnotation?.title = "No adress found."
+                    } else {
+                        self.selectedAnnotation?.title = addressString
+                    }
+                }
+        })
+    }
 
 //    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
 //        guard let annotation = annotation as? Artwork else {return nil}
