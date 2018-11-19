@@ -12,9 +12,20 @@ import ChameleonFramework
 
 class PointOfInterestTableViewController: SwipeTableViewController {
     
+    //MARK: - DB variables
     var pointOfInterests: Results<PointOfInterest>?
     let realm = try! Realm()
     
+    var selectedTrip : Trip? {
+        didSet{
+            loadPointOfInterests()
+        }
+    }
+    
+    //MARK: - Local variables
+    var tableviewOrder: [Int] = []
+    
+    //MARK: - Buttons and actions
     @IBAction func mapButtonPressed(_ sender: Any) {
         performSegue(withIdentifier: "goToMap", sender: self)
     }
@@ -23,33 +34,40 @@ class PointOfInterestTableViewController: SwipeTableViewController {
     
     @IBAction func saveButtonPressed(_ sender: Any) {
         tableView.isEditing = false
-        // Disable all buttons
-        navigationItem.rightBarButtonItem = nil
-        // Enable mapButton
-        navigationItem.rightBarButtonItem = self.mapButton
-        navigationItem.setHidesBackButton(false, animated: true)
-        // Save data and reload table to change cell colors
-        loadPointOfInterests()
+        tableView.isScrollEnabled = true
+        displayNavBarButtons(hideBackButton: false, rightButtons: mapButton)
+        tableView.reloadData()
     }
     
     @IBOutlet var saveButton: UIBarButtonItem!
     
-    var selectedTrip : Trip? {
-        didSet{
-            loadPointOfInterests()
+    @IBAction func cancelButtonPressed(_ sender: Any) {
+        guard let pointofInterests = selectedTrip?.pointOfInterests else {fatalError("Problem with loading point of interests for selected trip.")}
+        do {
+            try realm.write {
+                for (index, pointOfInterest) in pointofInterests.enumerated() {
+                    pointOfInterest.order = tableviewOrder[index]
+                }
+            }
+        } catch {
+            print("Error deleting, \(error)")
         }
+        tableView.isEditing = false
+        tableView.isScrollEnabled = true
+        displayNavBarButtons(hideBackButton: false, rightButtons: mapButton)
+        tableView.reloadData()
     }
-  
+    
+    @IBOutlet var cancelButton: UIBarButtonItem!
+    
+    //MARK: - Controller base functionality
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.separatorStyle = .none
         // long press recognizer for tableview, placed in viewDidLoad
         let recognizer = UILongPressGestureRecognizer(target: self, action: #selector(longPress))
         view.addGestureRecognizer(recognizer)
-        // Disable all buttons
-        navigationItem.rightBarButtonItem = nil
-        // Enable mapButton
-        navigationItem.rightBarButtonItem = self.mapButton
+        displayNavBarButtons(hideBackButton: false, rightButtons: mapButton)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -71,13 +89,19 @@ class PointOfInterestTableViewController: SwipeTableViewController {
     //MARK: - Nav Bar Setup Methods
     func updateNavBar(withHexCode colorHexCode: String) {
         guard let navBar = navigationController?.navigationBar else {fatalError("Navigation controller does not exist.")}
-        guard let navBarColor = UIColor(hexString: colorHexCode) else {fatalError()}
+        guard let navBarColor = UIColor(hexString: colorHexCode) else {fatalError("Color does not exists.")}
         //navbar background color
         navBar.barTintColor = navBarColor
         //navbar buttons and nav bar items color
         navBar.tintColor = ContrastColorOf(navBarColor, returnFlat: true)
         //Lagre text because we mark in storyboard preffered large titles, get from all navbar atributes foreground color and change it to specified color
         navBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor : ContrastColorOf(navBarColor, returnFlat: true)]
+    }
+    
+    func displayNavBarButtons(hideBackButton: Bool, rightButtons: UIBarButtonItem...) {
+        navigationItem.rightBarButtonItems = nil
+        navigationItem.setHidesBackButton(hideBackButton, animated: true)
+        navigationItem.setRightBarButtonItems(rightButtons, animated: true)
     }
     
     //MARK: - Tableview Datasource Methods
@@ -97,11 +121,12 @@ class PointOfInterestTableViewController: SwipeTableViewController {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
         if let pointOfInterest = pointOfInterests?[indexPath.row] {
             cell.textLabel?.text = pointOfInterest.title
-            if let color = UIColor(hexString: selectedTrip!.color)?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(pointOfInterests!.count)) {
-                cell.backgroundColor = color
-                cell.textLabel?.textColor = ContrastColorOf(color, returnFlat: true)
-                cell.tintColor = ContrastColorOf(color, returnFlat: true)
-            }
+            // Color
+            guard let color = UIColor(hexString: selectedTrip!.color)?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(pointOfInterests!.count)) else {fatalError("Color does not exists.")}
+            cell.backgroundColor = color
+            cell.textLabel?.textColor = ContrastColorOf(color, returnFlat: true)
+            cell.tintColor = ContrastColorOf(color, returnFlat: true)
+            // Checkmark
             cell.accessoryType = pointOfInterest.done ? .checkmark : .none
         } else {
             cell.textLabel?.text = "No Point of interest added."
@@ -111,14 +136,14 @@ class PointOfInterestTableViewController: SwipeTableViewController {
     
     //MARK: - Tableview Delegate Methods
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if let pointOfInterest = pointOfInterests?[indexPath.row] {
-            do {
-                try realm.write {
-                    pointOfInterest.done = !pointOfInterest.done
-                }
-            } catch  {
-                print("Error saving done status \(error)")
+        
+        guard let pointOfInterest = pointOfInterests?[indexPath.row] else {fatalError("Problem with loading point of interest.")}
+        do {
+            try realm.write {
+                pointOfInterest.done = !pointOfInterest.done
             }
+        } catch  {
+            print("Error saving done status \(error)")
         }
         self.tableView.reloadData()
         tableView.deselectRow(at: indexPath, animated: true)
@@ -139,119 +164,61 @@ class PointOfInterestTableViewController: SwipeTableViewController {
 
     override func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
         if sourceIndexPath.row != destinationIndexPath.row {
-            if let actualPointOfInterests = pointOfInterests  {
-                do {
-                    try realm.write {
-                        actualPointOfInterests[sourceIndexPath.row].order = -1
-                        print("Moved - \(actualPointOfInterests[sourceIndexPath.row].order)")
-                        var i = 0
-                        for pointOfInterest in actualPointOfInterests {
-                            if pointOfInterest.order != -1 && i <= destinationIndexPath.row{
-                                pointOfInterest.order = i
-                                i += 1
-                            }
-                            if pointOfInterest.order == -1 {
-                                pointOfInterest.order = destinationIndexPath.row
-                            }
-                            if pointOfInterest.order != -1 && i > destinationIndexPath.row{
-                                pointOfInterest.order = i
-                                i += 1
-                            }
+            guard let actualPointOfInterests = pointOfInterests else {fatalError("Problem with loading actual point of interests from DB.")}
+            do {
+                try realm.write {
+                    actualPointOfInterests[sourceIndexPath.row].order = -1
+                    var i = 0
+                    for pointOfInterest in actualPointOfInterests {
+                        if pointOfInterest.order != -1 && i <= destinationIndexPath.row{
+                            pointOfInterest.order = i
+                            i += 1
+                        }
+                        if pointOfInterest.order == -1 {
+                            pointOfInterest.order = destinationIndexPath.row
+                        }
+                        if pointOfInterest.order != -1 && i > destinationIndexPath.row{
+                            pointOfInterest.order = i
+                            i += 1
                         }
                     }
-                } catch {
-                    print("Error \(error)")
                 }
+            } catch {
+                print("Error \(error)")
             }
         }
     }
 
     //Tableview long press gesture reckognizer
-    #warning("Implement stop scrolling when table is reordering or search good way how to do it.")
     @objc func longPress(longPressGestureRecognizer: UILongPressGestureRecognizer) {
         if longPressGestureRecognizer.state == UIGestureRecognizer.State.began {
             tableView.isEditing = true
-            // Disable all buttons
-            navigationItem.rightBarButtonItem = nil
-            // Enable saveButton
-            navigationItem.rightBarButtonItem = self.saveButton
-            navigationItem.setHidesBackButton(true, animated: true)
+            tableView.isScrollEnabled = false
+            displayNavBarButtons(hideBackButton: true, rightButtons: saveButton, cancelButton)
+            //Load actual tableview order
+            guard let pointOfInterests = selectedTrip?.pointOfInterests else {fatalError("Problem with loading point of interests for selected trip.")}
+            for pointOfInterest in pointOfInterests{
+                tableviewOrder.append(pointOfInterest.order)
+            }
         }
     }
     
-    //MARK: - Add New Point Of Interests
-    #warning("unused method remove when not needed")
-    @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
-        
-        var textField = UITextField()
-        
-        let alert = UIAlertController(title: "Add new point of interest", message: "", preferredStyle: .alert)
-        
-        let action = UIAlertAction(title: "Add point of interest", style: .default) { (action) in
-            if let currentTrip = self.selectedTrip {
-                do {
-                    #warning("Edit this to actual POI values, like order, lat, long,...")
-                    try self.realm.write {
-                        let newPointOfInterest = PointOfInterest()
-                        newPointOfInterest.title = textField.text!
-                        newPointOfInterest.dateCreated = Date()
-                        currentTrip.pointOfInterests.append(newPointOfInterest)
-                    }
-                } catch {
-                    print("Error saving new point of interest \(error)")
-                }
-            }
-            self.tableView.reloadData()
-        }
-        
-        alert.addTextField { (alertTextField) in
-            alertTextField.placeholder = "Create new point of interest"
-            textField = alertTextField
-        }
-        alert.addAction(action)
-        
-        present(alert, animated: true, completion: nil)
-    }
     
     fileprivate func loadPointOfInterests() {
         pointOfInterests = selectedTrip?.pointOfInterests.sorted(byKeyPath: "order", ascending: true)
         tableView.reloadData()
     }
-    
-    
+  
     
     override func updateModel(at indexPath: IndexPath) {
-        if let item = pointOfInterests?[indexPath.row] {
-            do {
-                try realm.write {
-                    realm.delete(item)
-                }
-            } catch {
-                print("Error deleting, \(error)")
+        guard let pointOfInterest = pointOfInterests?[indexPath.row] else {fatalError("Problem with loading point of interest.")}
+        do {
+            try realm.write {
+                realm.delete(pointOfInterest)
             }
+        } catch {
+            print("Error deleting, \(error)")
         }
     }
     
 }
-
-//MARK: - Search Bar Methods
-extension PointOfInterestTableViewController: UISearchBarDelegate {
-    
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        //        todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "title", ascending: true)
-        #warning("Edit this to order")
-        pointOfInterests = pointOfInterests?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: true)
-        tableView.reloadData()
-    }
-    
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        if searchBar.text?.count == 0 {
-            loadPointOfInterests()
-            DispatchQueue.main.async {
-                searchBar.resignFirstResponder()
-            }
-        }
-    }
-}
-
-
