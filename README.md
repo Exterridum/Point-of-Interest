@@ -5,18 +5,25 @@ Features:
 - Map - (This is maybe laready done )set default location, zoom, view (sat,road)
 - Turn PoI on or off.
 - Zoom button functionality.
-- Sat/road view
-- Get current location button
-- Make route from point of interests - https://stackoverflow.com/questions/46036746/get-directions-between-multiple-coordinate
-
-
-- Click out of tableview into map when search disable searching.
+- Set/road view.
+- Get current location button.
+- Make route from point of interests. - https://stackoverflow.com/questions/46036746/get-directions-between-multiple-coordinate
 - Change Map type functionality.
 - Get current location.
-- Different map markers e.q Food, AT, Place to visit, Parking, Station, Fuel station, Hotel or Housing,
+- Different map markers e.q Food, AT, Place to visit, Parking, Station, Fuel station, Hotel or Housing.
 - Save map annotations to array and set order for it.
-- Display annotations in table as for example items in todolist.
+- Completed POI (marked with checkmark) change color.
+
+- Search
+- Click out of tableview into map when search disable searching.
 - Empty string search validation.
+
+
+- POI Screen
+- Checkmarks on table move to left when table is reordering.
+- Cell text size, limit to 2 rows then use ....
+
+
 ~~- Cancel button functionality.~~
 
 Refactoring:

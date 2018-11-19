@@ -34,6 +34,7 @@ class PointOfInterestTableViewController: SwipeTableViewController {
     
     @IBAction func saveButtonPressed(_ sender: Any) {
         tableView.isEditing = false
+        tableView.isScrollEnabled = true
         displayNavBarButtons(hideBackButton: false, rightButtons: mapButton)
         tableView.reloadData()
     }
@@ -52,6 +53,7 @@ class PointOfInterestTableViewController: SwipeTableViewController {
             print("Error deleting, \(error)")
         }
         tableView.isEditing = false
+        tableView.isScrollEnabled = true
         displayNavBarButtons(hideBackButton: false, rightButtons: mapButton)
         tableView.reloadData()
     }
@@ -188,10 +190,10 @@ class PointOfInterestTableViewController: SwipeTableViewController {
     }
 
     //Tableview long press gesture reckognizer
-    #warning("Implement stop scrolling when table is reordering or search good way how to do it.")
     @objc func longPress(longPressGestureRecognizer: UILongPressGestureRecognizer) {
         if longPressGestureRecognizer.state == UIGestureRecognizer.State.began {
             tableView.isEditing = true
+            tableView.isScrollEnabled = false
             displayNavBarButtons(hideBackButton: true, rightButtons: saveButton, cancelButton)
             //Load actual tableview order
             guard let pointOfInterests = selectedTrip?.pointOfInterests else {fatalError("Problem with loading point of interests for selected trip.")}
