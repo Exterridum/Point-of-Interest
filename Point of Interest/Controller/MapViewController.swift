@@ -67,6 +67,7 @@ class MapViewController: UIViewController {
 //        mapView.showsPointsOfInterest = true
 //        mapView.mapType = .satellite
 //        Debug
+        loadPoitOfInterests()
     }
     
     #warning("Remove propably wont need it anymore")
@@ -157,7 +158,6 @@ extension MapViewController: UISearchBarDelegate, MKLocalSearchCompleterDelegate
                 newPointOfInterest.title = title
                 newPointOfInterest.latitude = latitude
                 newPointOfInterest.longitude = longitude
-                newPointOfInterest.order = self.mapView.annotations.count
                 newPointOfInterest.dateCreated = Date()
                 self.selectedPointOfInterest = newPointOfInterest
                 
@@ -172,14 +172,13 @@ extension MapViewController: UISearchBarDelegate, MKLocalSearchCompleterDelegate
                 if let currentTrip = self.selectedTrip {
                     do {
                         try self.realm.write {
+                            newPointOfInterest.order = currentTrip.pointOfInterests.count
                             currentTrip.pointOfInterests.append(newPointOfInterest)
                         }
                     } catch {
                         print("Error saving new point of interest \(error)")
                     }
                 }
-                
-
                 
                 //Zooming in on annotation
                 let coordinate: CLLocationCoordinate2D = CLLocationCoordinate2DMake(latitude, longitude)
@@ -219,6 +218,13 @@ extension MapViewController: MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         selectedAnnotation = view.annotation as? MKPointAnnotation
         view.isDraggable = true
+        
+        guard let pointOfInterests = selectedTrip?.pointOfInterests else {fatalError("Problem with loading point of interests.")}
+        for pointOfInterest in pointOfInterests {
+            if pointOfInterest.title == selectedAnnotation?.title {
+                selectedPointOfInterest = pointOfInterest
+            }
+        }
     }
     
     func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, didChange newState: MKAnnotationView.DragState, fromOldState oldState: MKAnnotationView.DragState) {
@@ -228,12 +234,17 @@ extension MapViewController: MKMapViewDelegate {
             print("dragging.....")
         case .ending, .canceling:
             // view.dragState = .none
-            let lat = view.annotation?.coordinate.latitude
-            let long = view.annotation?.coordinate.longitude
-            getAddressFromLatLon(latitude: lat!, longitude: long!)
             view.isDraggable = false
-            #warning("check if adress exists if not disable cross button with message you must speciffy correct route")
             
+            //Save selected point of interest into DB
+            guard let lat = view.annotation?.coordinate.latitude else {fatalError("Unable to get latitude.")}
+            guard let long = view.annotation?.coordinate.longitude else {fatalError("Unable to get longitude.")}
+            
+            if selectedAnnotation?.title == "No adress found." {
+                #warning("check if adress exists if not disable cross button with message you must speciffy correct route")
+            } else {
+                getAddressFromLatLon(latitude: lat, longitude: long)
+            }
         default: break
         }
     }
@@ -241,20 +252,19 @@ extension MapViewController: MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         if annotation is MKPointAnnotation {
             let pinAnnotationView = MKAnnotationView(annotation: annotation, reuseIdentifier: "myPin")
-            
-
             pinAnnotationView.annotation = annotation
-//            pinAnnotationView.isDraggable = true
             pinAnnotationView.canShowCallout = true
-            pinAnnotationView.image = UIImage(named:"pin-icon.png")
-
+            
+            let origImage = UIImage(named: "pin-icon.png");
+            let tintedImage = origImage?.withRenderingMode(UIImage.RenderingMode.alwaysTemplate)
+            pinAnnotationView.image = tintedImage!.tinted(with: .red)
             return pinAnnotationView
         }
 
         return nil
     }
     
-    func getAddressFromLatLon(latitude: Double, longitude: Double){
+    func getAddressFromLatLon(latitude: Double, longitude: Double) {
         var center : CLLocationCoordinate2D = CLLocationCoordinate2D()
         
         let ceo: CLGeocoder = CLGeocoder()
@@ -274,7 +284,7 @@ extension MapViewController: MKMapViewDelegate {
                 
                 if pm.count > 0 {
                     let pm = placemarks![0]
-        
+                    
                     if pm.subLocality != nil {
                         addressString = addressString + pm.subLocality! + ", "
                     }
@@ -292,35 +302,54 @@ extension MapViewController: MKMapViewDelegate {
                     }
                     if addressString.isEmpty {
                         self.selectedAnnotation?.title = "No adress found."
+                        
                     } else {
                         self.selectedAnnotation?.title = addressString
+                        guard let pointOfInterests = self.selectedTrip?.pointOfInterests, let selectedPointOfInterest = self.selectedPointOfInterest else {fatalError("Problem with loading point of interests.")}
+                        do {
+                            try self.realm.write {
+                                pointOfInterests[(selectedPointOfInterest.order)].title = addressString
+                                pointOfInterests[(selectedPointOfInterest.order)].latitude = latitude
+                                pointOfInterests[(selectedPointOfInterest.order)].longitude = longitude
+                            }
+                        } catch  {
+                            print("Error saving done status \(error)")
+                        }
                     }
                 }
         })
     }
-
-//    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-//        guard let annotation = annotation as? Artwork else {return nil}
-//        let identifier = "marker"
-//        var view: MKMarkerAnnotationView
-//        if let dequeuedView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
-//            as? MKMarkerAnnotationView {
-//            dequeuedView.annotation = annotation
-//            view = dequeuedView
-//        } else {
-//            // 5
-//            view = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
-//            view.canShowCallout = true
-//            view.calloutOffset = CGPoint(x: -5, y: 5)
-//            view.rightCalloutAccessoryView = UIButton(type: .detailDisclosure)
-//        }
-//        return view
-//    }
-//
-//    func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
-//        let location = view.annotation as! Artwork
-//        let launchOptions = [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving]
-//        location.mapItem().openInMaps(launchOptions: launchOptions)
-//    }
     
+    func loadPoitOfInterests() {
+        
+        guard let pointOfInterests = selectedTrip?.pointOfInterests else {fatalError("Problem with loading point of interests.")}
+        
+        //If POI is not empty, otherwise all will crash out of index 0 .. 0
+        if pointOfInterests.count != 0 {
+            for pointOfInterest in pointOfInterests {
+                let annotation = MKPointAnnotation()
+                annotation.title = pointOfInterest.title
+                annotation.coordinate = CLLocationCoordinate2DMake(pointOfInterest.latitude, pointOfInterest.longitude)
+
+                self.mapView.addAnnotation(annotation)
+            }
+            
+            #warning("Change [0] to area of all points, if poits are very far then use first point")
+            let coordinate: CLLocationCoordinate2D = CLLocationCoordinate2DMake(pointOfInterests[0].latitude, pointOfInterests[0].longitude)
+            let span = MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 1)
+            let region = MKCoordinateRegion(center: coordinate, span: span)
+            self.mapView.setRegion(region, animated: true)
+        }
+    }
+}
+
+extension UIImage {
+    func tinted(with color: UIColor) -> UIImage? {
+        UIGraphicsBeginImageContextWithOptions(size, false, scale)
+        defer { UIGraphicsEndImageContext() }
+        color.set()
+        withRenderingMode(.alwaysTemplate)
+            .draw(in: CGRect(origin: .zero, size: size))
+        return UIGraphicsGetImageFromCurrentImageContext()
+    }
 }
