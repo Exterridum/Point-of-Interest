@@ -89,6 +89,28 @@ class MapViewController: UIViewController {
         
         self.view.addSubview(activityIndicator)
     }
+    
+    func loadPoitOfInterests() {
+        
+        guard let pointOfInterests = selectedTrip?.pointOfInterests else {fatalError("Problem with loading point of interests.")}
+        
+        //If POI is not empty, otherwise all will crash out of index 0 .. 0
+        if pointOfInterests.count != 0 {
+            for pointOfInterest in pointOfInterests {
+                let annotation = MKPointAnnotation()
+                annotation.title = pointOfInterest.title
+                annotation.coordinate = CLLocationCoordinate2DMake(pointOfInterest.latitude, pointOfInterest.longitude)
+                
+                self.mapView.addAnnotation(annotation)
+            }
+            
+            #warning("Change [0] to area of all points, if poits are very far then use first point")
+            let coordinate: CLLocationCoordinate2D = CLLocationCoordinate2DMake(pointOfInterests[0].latitude, pointOfInterests[0].longitude)
+            let span = MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 1)
+            let region = MKCoordinateRegion(center: coordinate, span: span)
+            self.mapView.setRegion(region, animated: true)
+        }
+    }
 }
 
 //MARK: - Search bar functionality
@@ -257,7 +279,18 @@ extension MapViewController: MKMapViewDelegate {
             
             let origImage = UIImage(named: "pin-icon.png");
             let tintedImage = origImage?.withRenderingMode(UIImage.RenderingMode.alwaysTemplate)
-            pinAnnotationView.image = tintedImage!.tinted(with: .red)
+            
+            guard let pointOfInterests = selectedTrip?.pointOfInterests else {fatalError("Problem with loading point of interests.")}
+            for pointOfInterest in pointOfInterests {
+                if pointOfInterest.title == annotation.title {
+                    if pointOfInterest.done {
+                        pinAnnotationView.image = tintedImage!.tinted(with: UIColor(red:0.11, green:0.52, blue:0.47, alpha:1.0))
+                    } else {
+                        pinAnnotationView.image = tintedImage!.tinted(with: UIColor(red:0.72, green:0.12, blue:0.20, alpha:1.0))
+                    }
+                }
+            }
+            
             return pinAnnotationView
         }
 
@@ -320,27 +353,7 @@ extension MapViewController: MKMapViewDelegate {
         })
     }
     
-    func loadPoitOfInterests() {
-        
-        guard let pointOfInterests = selectedTrip?.pointOfInterests else {fatalError("Problem with loading point of interests.")}
-        
-        //If POI is not empty, otherwise all will crash out of index 0 .. 0
-        if pointOfInterests.count != 0 {
-            for pointOfInterest in pointOfInterests {
-                let annotation = MKPointAnnotation()
-                annotation.title = pointOfInterest.title
-                annotation.coordinate = CLLocationCoordinate2DMake(pointOfInterest.latitude, pointOfInterest.longitude)
-
-                self.mapView.addAnnotation(annotation)
-            }
-            
-            #warning("Change [0] to area of all points, if poits are very far then use first point")
-            let coordinate: CLLocationCoordinate2D = CLLocationCoordinate2DMake(pointOfInterests[0].latitude, pointOfInterests[0].longitude)
-            let span = MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 1)
-            let region = MKCoordinateRegion(center: coordinate, span: span)
-            self.mapView.setRegion(region, animated: true)
-        }
-    }
+    
 }
 
 extension UIImage {
