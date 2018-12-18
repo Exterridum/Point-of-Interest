@@ -10,9 +10,9 @@ Features:
 - Make route from point of interests. - https://stackoverflow.com/questions/46036746/get-directions-between-multiple-coordinate
 - Change Map type functionality.
 - Get current location.
-- Different map markers e.q Food, AT, Place to visit, Parking, Station, Fuel station, Hotel or Housing.
-- Save map annotations to array and set order for it.
-- Completed POI (marked with checkmark) change color.
+~~- Different map markers e.q Food, AT, Place to visit, Parking, Station, Fuel station, Hotel or Housing.~~
+~~- Save map annotations to array and set order for it.~~
+~~- Completed POI (marked with checkmark) change color.~~
 
 - Search
 - Click out of tableview into map when search disable searching.
@@ -20,8 +20,8 @@ Features:
 
 
 - POI Screen
-- Checkmarks on table move to left when table is reordering.
-- Cell text size, limit to 2 rows then use ....
+- Checkmarks on table move to left when table is reordering. Disable checkbox
+~~- Cell text size, limit to 2 rows then use ....~~
 
 
 ~~- Cancel button functionality.~~
